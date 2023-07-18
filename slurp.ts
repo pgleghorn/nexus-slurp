@@ -55,11 +55,42 @@ async function saveFile(url: string, filePath: string) {
   await fs.writeFile(filePath, new Uint8Array(fileContent));
 }
 
+// Command line switches
+const switches = {
+  '--baseUrl': { description: 'Base URL of the Nexus server', value: '' },
+  '--repositoryPath': { description: 'Path of the repository on the Nexus server', value: '' },
+  '--targetPath': { description: 'Path where the downloaded files will be saved', value: '' },
+  '--caFile': { description: 'Path to the custom CA file', value: '' },
+  '--help': { description: 'Prints the available switches', value: false },
+};
+
+for (let i = 0; i < Deno.args.length; i++) {
+  const arg = Deno.args[i];
+
+  if (arg in switches) {
+    if (arg === '--help') {
+      printHelp();
+      Deno.exit();
+    }
+
+    switches[arg].value = Deno.args[i + 1];
+  }
+}
+
+function printHelp() {
+  console.log('Usage: deno run --allow-net --allow-write --allow-read downloadFromNexus.ts [switches]');
+  console.log('');
+  console.log('Switches:');
+  Object.entries(switches).forEach(([switchName, { description }]) => {
+    console.log(`  ${switchName}\t${description}`);
+  });
+}
+
 // Usage example
-const baseUrl = 'https://nexus.example.com/repository/raw';
-const repositoryPath = 'my/repository/path';
-const targetPath = './downloads';
-const caFile = '/path/to/custom/ca/file.pem';
+const baseUrl = switches['--baseUrl'].value || 'https://nexus.example.com/repository/raw';
+const repositoryPath = switches['--repositoryPath'].value || 'my/repository/path';
+const targetPath = switches['--targetPath'].value || './downloads';
+const caFile = switches['--caFile'].value || '/path/to/custom/ca/file.pem';
 
 await ensureDir(targetPath);
 await downloadFromNexus(baseUrl, repositoryPath, targetPath, caFile);
