@@ -1,4 +1,4 @@
-import * as fs from 'node:fs';
+import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ensureDir } from 'https://deno.land/std/fs/mod.ts';
 
@@ -10,7 +10,7 @@ async function downloadFromNexus(
 ) {
   const options: any = {};
   if (caFile) {
-    const caData = await fs.promises.readFile(caFile);
+    const caData = await fs.readFile(caFile);
     options.caData = caData;
   }
 
@@ -51,25 +51,8 @@ async function saveFile(url: string, filePath: string) {
     throw new Error(`Failed to download file: ${response.status} ${response.statusText}`);
   }
 
-  const fileStream = await fs.promises.open(filePath, 'w');
-  await copyStream(response.body!, fileStream);
-  fileStream.close();
-}
-
-async function copyStream(src: ReadableStream<Uint8Array>, dest: fs.promises.FileHandle) {
-  const writer = dest.writable ? dest : fs.createWriteStream(dest.path);
-  const reader = src.getReader();
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-
-    await writer.write(value);
-  }
-
-  await writer.close();
+  const fileContent = await response.arrayBuffer();
+  await fs.writeFile(filePath, new Uint8Array(fileContent));
 }
 
 // Usage example
