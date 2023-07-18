@@ -8,10 +8,10 @@ async function downloadFromNexus(
   targetPath: string,
   caFile?: string
 ) {
-  const options: RequestInit = {};
+  const options: any = {};
   if (caFile) {
     const caData = await fs.promises.readFile(caFile);
-    options.caFile = caFile;
+    options.caData = caData;
   }
 
   let page = 1;
