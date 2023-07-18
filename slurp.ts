@@ -12,7 +12,7 @@ async function downloadFromNexus(
   const options: RequestInit = {};
   if (caFile) {
     const caData = await Deno.readFile(caFile);
-    options.caFile = caData;
+    options.caFile = `data:application/x-x509-ca-cert;base64,${base64Encode(caData)}`;
   }
 
   let page = 1;
@@ -44,6 +44,12 @@ async function downloadFromNexus(
     hasNextPage = repositoryListing.page < repositoryListing.pages;
     page++;
   }
+}
+
+function base64Encode(data: Uint8Array): string {
+  const encoder = new TextEncoder();
+  const encoded = encoder.encode(data);
+  return btoa(String.fromCharCode.apply(null, encoded));
 }
 
 // Usage example
