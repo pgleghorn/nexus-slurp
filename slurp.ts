@@ -2,6 +2,11 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ensureDir } from 'https://deno.land/std/fs/mod.ts';
 
+interface Switch {
+  description: string;
+  value: string | boolean;
+}
+
 async function downloadFromNexus(
   baseUrl: string,
   repositoryPath: string,
@@ -56,7 +61,7 @@ async function saveFile(url: string, filePath: string) {
 }
 
 // Command line switches
-const switches = {
+const switches: Record<string, Switch> = {
   '--baseUrl': { description: 'Base URL of the Nexus server', value: '' },
   '--repositoryPath': { description: 'Path of the repository on the Nexus server', value: '' },
   '--targetPath': { description: 'Path where the downloaded files will be saved', value: '' },
@@ -87,10 +92,10 @@ function printHelp() {
 }
 
 // Usage example
-const baseUrl = switches['--baseUrl'].value || 'https://nexus.example.com/repository/raw';
-const repositoryPath = switches['--repositoryPath'].value || 'my/repository/path';
-const targetPath = switches['--targetPath'].value || './downloads';
-const caFile = switches['--caFile'].value || '/path/to/custom/ca/file.pem';
+const baseUrl = switches['--baseUrl'].value as string || 'https://nexus.example.com/repository/raw';
+const repositoryPath = switches['--repositoryPath'].value as string || 'my/repository/path';
+const targetPath = switches['--targetPath'].value as string || './downloads';
+const caFile = switches['--caFile'].value as string || '/path/to/custom/ca/file.pem';
 
 await ensureDir(targetPath);
 await downloadFromNexus(baseUrl, repositoryPath, targetPath, caFile);
