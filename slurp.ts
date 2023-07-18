@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { ensureDir } from 'https://deno.land/std/fs/mod.ts';
+import { streamReader } from 'https://deno.land/std/io/mod.ts';
 
 async function downloadFromNexus(
   baseUrl: string,
@@ -52,7 +53,8 @@ async function saveFile(url: string, filePath: string) {
   }
 
   const fileStream = await fs.promises.open(filePath, 'w');
-  await Deno.copy(response.body!, fileStream);
+  const reader = streamReader(response.body!);
+  await Deno.copy(reader, fileStream);
   fileStream.close();
 }
 
