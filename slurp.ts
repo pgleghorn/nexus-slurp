@@ -1,7 +1,6 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { ensureDir } from 'https://deno.land/std/fs/mod.ts';
-import { download } from 'https://deno.land/x/download/mod.ts';
 
 async function downloadFromNexus(
   baseUrl: string,
@@ -11,8 +10,8 @@ async function downloadFromNexus(
 ) {
   const options: RequestInit = {};
   if (caFile) {
-    const caData = await Deno.readFile(caFile);
-    options.caFile = `data:application/x-x509-ca-cert;base64,${base64Encode(caData)}`;
+    const caData = await fs.promises.readFile(caFile);
+    options.caData = caData;
   }
 
   let page = 1;
@@ -31,7 +30,7 @@ async function downloadFromNexus(
         const itemPath = path.join(targetPath, relativeFilePath);
 
         console.log(`Downloading: ${itemUrl}`);
-        await download(itemUrl, itemPath);
+        await saveFile(itemUrl, itemPath);
         console.log(`Downloaded: ${itemPath}`);
       } else if (item.type === 'directory') {
         const subdirectoryPath = path.join(targetPath, repositoryPath, item.name);
@@ -46,10 +45,15 @@ async function downloadFromNexus(
   }
 }
 
-function base64Encode(data: Uint8Array): string {
-  const encoder = new TextEncoder();
-  const encoded = encoder.encode(data);
-  return btoa(String.fromCharCode.apply(null, encoded));
+async function saveFile(url: string, filePath: string) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download file: ${response.status} ${response.statusText}`);
+  }
+
+  const fileStream = await fs.promises.open(filePath, 'w');
+  await Deno.copy(response.body!, fileStream);
+  fileStream.close();
 }
 
 // Usage example
